@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pokepeace </title>
+  <title>Pokepeace 排單與卡片分配工具</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -92,7 +92,7 @@
         </div>
       </div>
 
-      <!-- Tab Buttons -->
+      <!-- Tab Buttons & New Modal Button -->
       <div class="flex items-center gap-1.5 bg-white/80 p-1 rounded-2xl border border-[#FFC1C5]">
         <button id="tabRankBtn" onclick="switchTab('rank')" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 transition-all bg-[#FF7E67] text-white pika-btn-shadow">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5"></i>
@@ -100,7 +100,11 @@
         </button>
         <button id="tabPackBtn" onclick="switchTab('pack')" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 transition-all text-pika-textMain hover:bg-[#FFF3B8]">
           <i data-lucide="package-open" class="w-3.5 h-3.5"></i>
-          <span>出貨分配</span>
+          <span>卡片分配</span>
+        </button>
+        <button onclick="openAllocatedBuyersModal()" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 transition-all bg-[#FFF3B8] hover:bg-[#F7C948] text-pika-textMain border border-[#F7C948]">
+          <i data-lucide="truck" class="w-3.5 h-3.5 text-pika-accent"></i>
+          <span>出貨名單</span>
         </button>
       </div>
     </div>
@@ -186,7 +190,7 @@
 
     </section>
 
-    <!-- TAB 2: 出貨分配 -->
+    <!-- TAB 2: 卡片分配 -->
     <section id="packTab" class="hidden space-y-4">
       <div class="bg-white rounded-2xl p-4 pika-card-border pika-shadow space-y-3">
         <div class="border-b border-[#FFE8C8] pb-2.5">
@@ -237,41 +241,63 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="lg:col-span-2 bg-white rounded-2xl p-4 pika-card-border pika-shadow space-y-3">
-          <div class="flex items-center justify-between border-b border-[#FFE8C8] pb-2.5">
-            <h3 class="text-base font-bold text-pika-textMain flex items-center gap-1.5">
-              <i data-lucide="clipboard-check" class="w-4 h-4 text-pika-accent"></i>
-              開卡出貨分配紀錄
-            </h3>
-            <div class="flex items-center gap-2">
-              <span id="recordCountBadge" class="bg-[#E0F7FC] text-pika-blueText font-bold text-xs px-2 py-0.5 rounded-full border border-[#A5E3F3]">
-                已錄入 0 張
-              </span>
-              <button onclick="clearMatchRecords()" class="bg-[#FFDEE2] hover:bg-[#FFC1C5] text-pika-accent font-bold px-2.5 py-1 rounded-lg text-xs border border-[#FFB0B5] transition-all">
-                清空
-              </button>
-            </div>
-          </div>
-
-          <div id="matchLogList" class="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-            <div class="text-center py-8 text-pika-textSub text-xs">
-              <i data-lucide="sparkles" class="w-6 h-6 text-[#FFD2A6] mx-auto mb-1.5"></i>
-              尚未開卡，點擊上方卡片開始分配卡片！
-            </div>
+      <!-- 記錄清單 -->
+      <div class="bg-white rounded-2xl p-4 pika-card-border pika-shadow space-y-3">
+        <div class="flex items-center justify-between border-b border-[#FFE8C8] pb-2.5">
+          <h3 class="text-base font-bold text-pika-textMain flex items-center gap-1.5">
+            <i data-lucide="clipboard-check" class="w-4 h-4 text-pika-accent"></i>
+            開卡分配紀錄
+          </h3>
+          <div class="flex items-center gap-2">
+            <span id="recordCountBadge" class="bg-[#E0F7FC] text-pika-blueText font-bold text-xs px-2 py-0.5 rounded-full border border-[#A5E3F3]">
+              已錄入 0 張
+            </span>
+            <button onclick="clearMatchRecords()" class="bg-[#FFDEE2] hover:bg-[#FFC1C5] text-pika-accent font-bold px-2.5 py-1 rounded-lg text-xs border border-[#FFB0B5] transition-all">
+              清空
+            </button>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-4 pika-card-border pika-shadow space-y-3">
-          <h3 class="text-base font-bold text-pika-textMain flex items-center gap-1.5 border-b border-[#FFE8C8] pb-2.5">
-            <i data-lucide="users" class="w-4 h-4 text-pika-accent"></i>
-            買家配卡進度 (獲得 / 喊單)
-          </h3>
-          <div id="buyerProgressList" class="space-y-2 max-h-[400px] overflow-y-auto pr-1"></div>
+        <div id="matchLogList" class="space-y-2 max-h-[450px] overflow-y-auto pr-1">
+          <div class="text-center py-8 text-pika-textSub text-xs">
+            <i data-lucide="sparkles" class="w-6 h-6 text-[#FFD2A6] mx-auto mb-1.5"></i>
+            尚未開卡，點擊上方卡片開始分配卡片！
+          </div>
         </div>
       </div>
     </section>
   </main>
+
+  <!-- Modal: 最終排單 (出貨名單彙整) -->
+  <div id="allocatedBuyersModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 pika-card-border pika-shadow space-y-3 relative max-h-[85vh] overflow-y-auto">
+      <button onclick="closeAllocatedBuyersModal()" class="absolute top-3 right-3 text-pika-textSub hover:text-pika-textMain">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center justify-between border-b border-[#FFE8C8] pb-2.5">
+        <h3 class="text-base font-bold text-pika-textMain flex items-center gap-1.5">
+          <i data-lucide="user-check" class="w-4 h-4 text-pika-accent"></i>
+          🎉 最終排單
+        </h3>
+        <span id="allocatedBuyersBadge" class="bg-[#FFDEE2] text-pika-accent font-bold text-xs px-2.5 py-0.5 rounded-full border border-[#FFB0B5]">
+          共 0 位買家有分到卡
+        </span>
+      </div>
+
+      <div id="allocatedBuyersSummaryList" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div class="text-center py-6 text-pika-textSub text-xs col-span-full">
+          尚未有買家分到卡片喔！
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <button onclick="closeAllocatedBuyersModal()" class="w-full py-2 rounded-xl bg-[#FF7E67] text-white font-bold text-xs pika-btn-shadow hover:bg-[#FF6B52]">
+          關閉視窗
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal: 自定義卡片名字管理 -->
   <div id="cardManageModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
@@ -394,11 +420,15 @@
     let buyersData = JSON.parse(localStorage.getItem('poke_buyers')) || INITIAL_DEFAULT_BUYERS;
     let matchRecords = JSON.parse(localStorage.getItem('poke_records')) || [];
 
+    // 狀態管理：已通知買家 (notified) 與 已打包 (packed)
+    let buyerStates = JSON.parse(localStorage.getItem('poke_buyer_states')) || {};
+
     function saveDataToStorage() {
       localStorage.setItem('poke_cards', JSON.stringify(ALL_26_CARDS));
       localStorage.setItem('poke_cold', JSON.stringify(coldRoles));
       localStorage.setItem('poke_buyers', JSON.stringify(buyersData));
       localStorage.setItem('poke_records', JSON.stringify(matchRecords));
+      localStorage.setItem('poke_buyer_states', JSON.stringify(buyerStates));
     }
 
     function resetAllDataToDefault() {
@@ -408,6 +438,7 @@
         coldRoles = JSON.parse(JSON.stringify(INITIAL_DEFAULT_COLD));
         buyersData = JSON.parse(JSON.stringify(INITIAL_DEFAULT_BUYERS));
         matchRecords = [];
+        buyerStates = {};
         saveDataToStorage();
         location.reload();
       }
@@ -691,7 +722,6 @@
       }).join('');
 
       lucide.createIcons();
-      renderBuyerProgress();
     }
 
     function toggleAccordion(id) {
@@ -723,6 +753,15 @@
       renderColdRoleBadges();
       renderRankings();
       renderPackCards();
+    }
+
+    function openAllocatedBuyersModal() {
+      renderAllocatedBuyersSummary();
+      document.getElementById('allocatedBuyersModal').classList.remove('hidden');
+    }
+
+    function closeAllocatedBuyersModal() {
+      document.getElementById('allocatedBuyersModal').classList.add('hidden');
     }
 
     function renderManageCardLists() {
@@ -820,7 +859,7 @@
       matchRecords.unshift(newRecord);
       saveDataToStorage();
       renderMatchRecords();
-      renderBuyerProgress();
+      renderAllocatedBuyersSummary();
       renderOpenedSummary();
     }
 
@@ -885,6 +924,7 @@
         `;
         lucide.createIcons();
         renderOpenedSummary();
+        renderAllocatedBuyersSummary();
         return;
       }
 
@@ -894,7 +934,7 @@
             <span class="font-bold px-2 py-0.5 rounded-md text-[11px] ${rec.zone === 'A' ? 'bg-[#FFF3B8] text-pika-textMain' : 'bg-[#E0F7FC] text-pika-blueText'}">
               ${rec.zone}區 ${rec.role}
             </span>
-            <span class="font-bold text-pika-textMain">➡️ 出貨：</span>
+            <span class="font-bold text-pika-textMain">➡️ 分配給：</span>
             <span class="font-bold text-pika-accent">${rec.buyerName} ${rec.buyerOrderNo ? `(#${rec.buyerOrderNo})` : ''}</span>
           </div>
 
@@ -909,40 +949,179 @@
 
       lucide.createIcons();
       renderOpenedSummary();
+      renderAllocatedBuyersSummary();
     }
 
     function deleteSingleRecord(id) {
       matchRecords = matchRecords.filter(r => r.id !== id);
       saveDataToStorage();
       renderMatchRecords();
-      renderBuyerProgress();
+      renderAllocatedBuyersSummary();
     }
 
     function clearMatchRecords() {
-      if (confirm('確定要清空所有出貨分配紀錄嗎？')) {
+      if (confirm('確定要清空所有卡片分配紀錄嗎？')) {
         matchRecords = [];
         saveDataToStorage();
         renderMatchRecords();
-        renderBuyerProgress();
+        renderAllocatedBuyersSummary();
       }
     }
 
-    function renderBuyerProgress() {
-      const sorted = getSortedBuyers();
-      const progressContainer = document.getElementById('buyerProgressList');
+    // 複製通知文字，帶入 A區/B區 資訊
+    function copyBuyerNotice(buyerName, btnElement) {
+      const records = matchRecords.filter(r => r.buyerName === buyerName);
+      
+      if (records.length === 0) {
+        alert('該買家目前尚未分配到任何卡片喔！');
+        return;
+      }
 
-      progressContainer.innerHTML = sorted.map((b, idx) => {
-        const receivedCount = matchRecords.filter(r => r.buyerName === b.name).length;
+      const cardCounts = {};
+      records.forEach(r => {
+        const itemKey = `${r.zone}區${r.role}`;
+        cardCounts[itemKey] = (cardCounts[itemKey] || 0) + 1;
+      });
+
+      const cardDetailsStr = Object.entries(cardCounts)
+        .map(([itemKey, count]) => `${itemKey}${count}張`)
+        .join('、');
+
+      const totalCount = records.length;
+      const totalPrice = totalCount * 55;
+
+      const noticeText = `你好 卡片有排單到 ${cardDetailsStr} ，共計 ${totalPrice}元，晚點會給你賣貨便下單~`;
+
+      navigator.clipboard.writeText(noticeText).then(() => {
+        const originalText = btnElement.innerHTML;
+        btnElement.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i><span>已複製！</span>`;
+        btnElement.classList.remove('bg-[#FFDEE2]', 'text-pika-accent');
+        btnElement.classList.add('bg-green-100', 'text-green-600');
+        lucide.createIcons();
+
+        setTimeout(() => {
+          btnElement.innerHTML = originalText;
+          btnElement.classList.remove('bg-green-100', 'text-green-600');
+          btnElement.classList.add('bg-[#FFDEE2]', 'text-pika-accent');
+          lucide.createIcons();
+        }, 1500);
+      }).catch(err => {
+        alert('複製失敗，請手動複製：\n' + noticeText);
+      });
+    }
+
+    // 切換已通知 (notified) 狀態
+    function toggleBuyerNotified(buyerName) {
+      if (!buyerStates[buyerName]) buyerStates[buyerName] = {};
+      buyerStates[buyerName].notified = !buyerStates[buyerName].notified;
+      saveDataToStorage();
+      renderAllocatedBuyersSummary();
+    }
+
+    // 切換已打包 (packed) 狀態
+    function toggleBuyerPacked(buyerName) {
+      if (!buyerStates[buyerName]) buyerStates[buyerName] = {};
+      buyerStates[buyerName].packed = !buyerStates[buyerName].packed;
+      saveDataToStorage();
+      renderAllocatedBuyersSummary();
+    }
+
+    // 渲染「最終排單」買家彙整列表
+    function renderAllocatedBuyersSummary() {
+      const container = document.getElementById('allocatedBuyersSummaryList');
+      const badge = document.getElementById('allocatedBuyersBadge');
+
+      const buyerMap = {};
+      matchRecords.forEach(r => {
+        if (!buyerMap[r.buyerName]) {
+          buyerMap[r.buyerName] = {
+            buyerName: r.buyerName,
+            buyerOrderNo: r.buyerOrderNo,
+            cards: {}
+          };
+        }
+        const itemKey = `${r.zone}區 ${r.role}`;
+        buyerMap[r.buyerName].cards[itemKey] = (buyerMap[r.buyerName].cards[itemKey] || 0) + 1;
+      });
+
+      const buyerList = Object.values(buyerMap);
+      badge.innerText = `共 ${buyerList.length} 位買家有分到卡`;
+
+      if (buyerList.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-pika-textSub text-xs col-span-full">
+            尚未有買家分到卡片喔！
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = buyerList.map(b => {
+        const cardEntries = Object.entries(b.cards);
+        const totalCards = cardEntries.reduce((sum, [_, count]) => sum + count, 0);
+        const totalPrice = totalCards * 55;
+
+        const state = buyerStates[b.buyerName] || {};
+        const isNotified = !!state.notified;
+        const isPacked = !!state.packed;
+
+        // 動態背景色與透明度邏輯
+        let bgStyle = 'bg-[#FFFDF2] border-[#FFE8C8]';
+        if (isPacked) {
+          bgStyle = 'bg-[#EBF8FF] border-[#BEE3F8]'; // 已打包：淡藍色
+        }
+
+        let opacityStyle = isNotified ? 'opacity-40' : 'opacity-100'; // 已通知：變淡
+
         return `
-          <div class="bg-[#FFFDF2] p-2.5 rounded-xl border border-[#FFE8C8] space-y-0.5">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-bold text-pika-textMain">#${b.orderNo} ${b.name}</span>
-              <span class="font-bold text-pika-accent">${receivedCount} / ${b.totalQty} 張</span>
+          <div class="${bgStyle} ${opacityStyle} p-3 rounded-xl border space-y-2 flex flex-col justify-between shadow-sm transition-all duration-200">
+            <div>
+              <div class="flex items-center justify-between border-b border-[#FFE8C8]/60 pb-1.5">
+                <div class="flex items-center gap-1.5">
+                  <span class="bg-[#FF7E67] text-white font-bold text-[10px] px-1.5 py-0.5 rounded-md">
+                    ${b.buyerOrderNo ? `#${b.buyerOrderNo}` : '自留'}
+                  </span>
+                  <h4 class="font-bold text-pika-textMain text-sm">${b.buyerName}</h4>
+                </div>
+                <span class="font-extrabold text-pika-accent text-xs">
+                  共 ${totalCards} 張 ($${totalPrice})
+                </span>
+              </div>
+
+              <div class="flex flex-wrap gap-1.5 pt-2">
+                ${cardEntries.map(([itemKey, count]) => `
+                  <span class="px-2 py-0.5 rounded-md bg-white border border-[#FFE8C8] text-xs font-bold text-pika-textMain">
+                    ${itemKey} <span class="text-pika-accent font-extrabold">x${count}</span>
+                  </span>
+                `).join('')}
+              </div>
             </div>
-            <p class="text-[10px] text-pika-textSub truncate">${b.content}</p>
+
+            <!-- 操作按鈕區塊 -->
+            <div class="pt-2 border-t border-[#FFE8C8]/60 flex items-center justify-end gap-1.5">
+              <!-- 已通知打勾按鈕 -->
+              <button onclick="toggleBuyerNotified('${b.buyerName}')" title="已通知買家 (變淡)" class="p-1 rounded-lg border text-xs font-bold flex items-center gap-1 transition-all ${isNotified ? 'bg-gray-200 text-gray-700 border-gray-300' : 'bg-white hover:bg-gray-50 text-gray-500 border-[#FFE8C8]'}">
+                <i data-lucide="${isNotified ? 'check-square' : 'square'}" class="w-3.5 h-3.5 ${isNotified ? 'text-green-600' : ''}"></i>
+                <span>${isNotified ? '已通知' : '通知'}</span>
+              </button>
+
+              <!-- 已打包按鈕 -->
+              <button onclick="toggleBuyerPacked('${b.buyerName}')" title="已打包要出貨 (淡藍色背景)" class="px-2 py-1 rounded-lg border text-xs font-bold flex items-center gap-1 transition-all ${isPacked ? 'bg-[#3182CE] text-white border-[#2B6CB0]' : 'bg-white hover:bg-blue-50 text-[#3182CE] border-[#BEE3F8]'}">
+                <i data-lucide="package-check" class="w-3.5 h-3.5"></i>
+                <span>${isPacked ? '已打包' : '打包'}</span>
+              </button>
+
+              <!-- 複製通知文字 -->
+              <button onclick="copyBuyerNotice('${b.buyerName}', this)" class="bg-[#FFDEE2] hover:bg-[#FFC1C5] text-pika-accent font-bold px-2.5 py-1 rounded-lg text-xs border border-[#FFB0B5] flex items-center gap-1 transition-all shrink-0">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>複製</span>
+              </button>
+            </div>
           </div>
         `;
       }).join('');
+
+      lucide.createIcons();
     }
 
     function openAddBuyerModal() {
