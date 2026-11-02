@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poképeace 排單與出貨分配工具</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Fredoka:wght@400;600;700&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pika: {
+              bg: '#FFFDF2',
+              card: '#FFFFFF',
+              nav: '#FFEAEB',
+              navBorder: '#FFC1C5',
+              border: '#FFE8C8',
+              accent: '#FF7E67',
+              accentHover: '#FF6B52',
+              yellow: '#FFF3B8',
+              yellowDark: '#F7C948',
+              textMain: '#4A3728',
+              textSub: '#8C7361',
+              pinkBtn: '#FFDEE2',
+              blueTag: '#E0F7FC',
+              blueText: '#0083B0'
+            }
+          },
+          fontFamily: {
+            title: ['Bubblegum Sans', 'Fredoka', 'M PLUS Rounded 1c', 'sans-serif'],
+            body: ['M PLUS Rounded 1c', 'Zen Maru Gothic', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #FFFDF2;
+      color: #4A3728;
+      font-family: 'M PLUS Rounded 1c', 'Zen Maru Gothic', sans-serif;
+    }
+    .font-title-style {
+      font-family: 'Bubblegum Sans', 'Fredoka', 'M PLUS Rounded 1c', sans-serif;
+    }
+    .pika-shadow {
+      box-shadow: 0 4px 0px #F3D0A8;
+    }
+    .pika-btn-shadow {
+      box-shadow: 0 3px 0px #E59885;
+    }
+    .pika-btn-shadow:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0px #E59885;
+    }
+    .pika-card-border {
+      border: 2px solid #FFE8C8;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FFF9E6;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #FFD2A6;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-16">
+
+  <!-- 頂部導覽列 Navigation Bar -->
+  <header class="bg-[#FFEAEB] border-b-2 border-[#FFC1C5] sticky top-0 z-50 px-4 py-3 shadow-sm">
+    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">⚡</span>
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold font-title-style text-[#FF7E67] tracking-wider leading-none">
+            Poképeace Portal
+          </h1>
+          <p class="text-xs text-pika-textSub font-bold mt-0.5">排單算號器 & 出貨分配小幫手</p>
+        </div>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="flex items-center gap-2 bg-white/80 p-1 rounded-2xl border border-[#FFC1C5]">
+        <button id="tabRankBtn" onclick="switchTab('rank')" class="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all bg-[#FF7E67] text-white pika-btn-shadow">
+          <i data-lucide="list-ordered" class="w-4 h-4"></i>
+          <span>排單順序表</span>
+        </button>
+        <button id="tabPackBtn" onclick="switchTab('pack')" class="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all text-pika-textMain hover:bg-[#FFF3B8]">
+          <i data-lucide="package-open" class="w-4 h-4"></i>
+          <span>出貨分配</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 mt-6">
+
+    <!-- TAB 1: 排單算號器 -->
+    <section id="rankTab" class="space-y-6">
+
+      <!-- 控制面板：自定義卡片名字與冷門設定 -->
+      <div class="bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#FFE8C8] pb-4">
+          <div>
+            <h2 class="text-lg md:text-xl font-bold text-pika-textMain flex items-center gap-2">
+              <i data-lucide="settings-2" class="w-5 h-5 text-pika-accent"></i>
+              卡片名稱與冷門角色管理
+            </h2>
+            <p class="text-xs text-pika-textSub mt-1">規則：冷門角色數量（多者優先） ＞ 總喊單數量（多者優先） ＞ 留言時間先後</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="openCardManageModal()" class="bg-[#FFF3B8] hover:bg-[#F7C948] text-pika-textMain font-bold px-3 py-2 rounded-2xl text-xs sm:text-sm flex items-center gap-1.5 border border-[#F7C948] transition-all">
+              <i data-lucide="edit-3" class="w-4 h-4 text-pika-accent"></i>
+              <span>自定義 A/B卡片名字</span>
+            </button>
+            <button onclick="resetAllDataToDefault()" class="bg-gray-100 hover:bg-gray-200 text-pika-textSub font-bold px-3 py-2 rounded-2xl text-xs sm:text-sm flex items-center gap-1.5 border border-gray-300 transition-all">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+              <span>重置預設</span>
+            </button>
+            <button onclick="openAddBuyerModal()" class="bg-[#FFDEE2] hover:bg-[#FFC1C5] text-pika-textMain font-bold px-3 py-2 rounded-2xl text-xs sm:text-sm flex items-center gap-1.5 border border-[#FFB0B5] transition-all">
+              <i data-lucide="user-plus" class="w-4 h-4 text-pika-accent"></i>
+              <span>新增買家</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 冷門角標籤設置 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#FFFDF2] p-4 rounded-2xl border border-[#FFE8C8]">
+          <div>
+            <span class="text-xs font-bold text-pika-accent block mb-2">🌸 A區 冷門角色（點擊切換）：</span>
+            <div id="coldAContainer" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div>
+            <span class="text-xs font-bold text-pika-accent block mb-2">🌼 B區 冷門角色（點擊切換）：</span>
+            <div id="coldBContainer" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 買家名單列表 -->
+      <div class="bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#FFE8C8] pb-3">
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-bold text-pika-textMain">買家即時排單列表 (點擊展開 A/B區詳情)</h3>
+            <span id="buyerTotalBadge" class="bg-[#FFF3B8] text-pika-textMain font-bold text-xs px-2.5 py-1 rounded-full border border-[#F7C948]">
+              共 21 位買家
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="toggleGlobalNotes()" id="toggleNotesBtn" class="text-xs font-bold px-3 py-1.5 rounded-xl border border-[#FFE8C8] bg-white hover:bg-[#FFF3B8] flex items-center gap-1 text-pika-textMain">
+              <i data-lucide="eye-off" class="w-3.5 h-3.5"></i>
+              <span>隱藏買家備註</span>
+            </button>
+            <button onclick="expandAllAccordion(true)" class="text-xs font-bold px-2.5 py-1.5 rounded-xl border border-[#FFE8C8] hover:bg-[#FFF3B8]">
+              全部展開
+            </button>
+            <button onclick="expandAllAccordion(false)" class="text-xs font-bold px-2.5 py-1.5 rounded-xl border border-[#FFE8C8] hover:bg-[#FFF3B8]">
+              全部摺疊
+            </button>
+          </div>
+        </div>
+
+        <div id="accordionBuyerList" class="space-y-3"></div>
+      </div>
+
+    </section>
+
+    <!-- TAB 2: 出貨分配 -->
+    <section id="packTab" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-4">
+        <div class="border-b border-[#FFE8C8] pb-3">
+          <h2 class="text-lg md:text-xl font-bold text-pika-textMain flex items-center gap-2">
+            <i data-lucide="package-search" class="w-6 h-6 text-pika-accent"></i>
+            點選卡片直接分配發貨：
+          </h2>
+        </div>
+
+        <!-- 手動輸入區塊 -->
+        <div class="bg-[#FFFDF2] p-4 rounded-2xl border border-[#FFE8C8] flex flex-wrap items-center gap-3">
+          <span class="text-xs font-bold text-pika-textMain">✍️ 手動輸入：</span>
+          <select id="manualZoneSelect" class="px-3 py-2 rounded-xl border-2 border-[#FFE8C8] bg-white font-bold text-xs outline-none">
+            <option value="A">A區</option>
+            <option value="B">B區</option>
+          </select>
+          <input type="text" id="manualCardInput" placeholder="輸入卡片名稱與數量 (例如: 皮卡丘2 或 皮卡丘*2)" class="flex-1 min-w-[180px] px-3 py-2 rounded-xl border-2 border-[#FFE8C8] bg-white font-bold text-xs outline-none">
+          <button onclick="handleManualDraw()" class="bg-[#FF7E67] hover:bg-[#FF6B52] text-white font-bold px-4 py-2 rounded-xl text-xs pika-btn-shadow">
+            確認
+          </button>
+        </div>
+
+        <div class="space-y-3 pt-2">
+          <div>
+            <span class="text-xs font-bold text-[#FF7E67] block mb-2">🌸 A區 卡片（點擊即時配卡）：</span>
+            <div id="packCardsA" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div>
+            <span class="text-xs font-bold text-[#FF7E67] block mb-2">🌼 B區 卡片（點擊即時配卡）：</span>
+            <div id="packCardsB" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 目前開到的卡片統計區塊 -->
+      <div class="bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-3">
+        <div class="flex items-center justify-between border-b border-[#FFE8C8] pb-3">
+          <h3 class="text-lg font-bold text-pika-textMain flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-5 h-5 text-pika-accent"></i>
+            目前開到的卡片統計
+          </h3>
+          <span id="totalOpenedBadge" class="bg-[#FFF3B8] text-pika-textMain font-bold text-xs px-2.5 py-1 rounded-full border border-[#F7C948]">
+            總計 0 張
+          </span>
+        </div>
+        <div id="openedCardsSummary" class="flex flex-wrap gap-2 pt-1">
+          <span class="text-xs text-pika-textSub">尚未開出任何卡片</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-4">
+          <div class="flex items-center justify-between border-b border-[#FFE8C8] pb-3">
+            <h3 class="text-lg font-bold text-pika-textMain flex items-center gap-2">
+              <i data-lucide="clipboard-check" class="w-5 h-5 text-pika-accent"></i>
+              開卡出貨分配紀錄
+            </h3>
+            <div class="flex items-center gap-2">
+              <span id="recordCountBadge" class="bg-[#E0F7FC] text-pika-blueText font-bold text-xs px-2.5 py-1 rounded-full border border-[#A5E3F3]">
+                已錄入 0 張
+              </span>
+              <button onclick="clearMatchRecords()" class="bg-[#FFDEE2] hover:bg-[#FFC1C5] text-pika-accent font-bold px-3 py-1.5 rounded-xl text-xs border border-[#FFB0B5] transition-all">
+                清空紀錄
+              </button>
+            </div>
+          </div>
+
+          <div id="matchLogList" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+            <div class="text-center py-10 text-pika-textSub text-sm">
+              <i data-lucide="sparkles" class="w-8 h-8 text-[#FFD2A6] mx-auto mb-2"></i>
+              尚未開卡，點擊上方卡片開始分配卡片！
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-4">
+          <h3 class="text-lg font-bold text-pika-textMain flex items-center gap-2 border-b border-[#FFE8C8] pb-3">
+            <i data-lucide="users" class="w-5 h-5 text-pika-accent"></i>
+            買家配卡進度 (獲得數 / 喊單總數)
+          </h3>
+          <div id="buyerProgressList" class="space-y-3 max-h-[500px] overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: 自定義卡片名字管理 -->
+  <div id="cardManageModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 pika-card-border pika-shadow space-y-4 relative max-h-[85vh] overflow-y-auto">
+      <button onclick="closeCardManageModal()" class="absolute top-4 right-4 text-pika-textSub hover:text-pika-textMain">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+
+      <h3 class="text-xl font-bold text-pika-textMain flex items-center gap-2">
+        <i data-lucide="edit-3" class="w-5 h-5 text-pika-accent"></i>
+        自定義 A區 / B區 卡片名字
+      </h3>
+
+      <div class="space-y-4 pt-2">
+        <div>
+          <span class="text-xs font-bold text-pika-accent block mb-2">🌸 A區 卡片名單管理：</span>
+          <div id="manageCardListA" class="space-y-2"></div>
+          <div class="flex items-center gap-2 mt-2">
+            <input type="text" id="newCardNameA" placeholder="新增 A區卡片名稱..." class="flex-1 px-3 py-1.5 rounded-xl border-2 border-[#FFE8C8] outline-none text-xs font-bold">
+            <button onclick="addNewCustomCard('A')" class="bg-[#FFDEE2] hover:bg-[#FFC1C5] text-pika-accent font-bold px-3 py-1.5 rounded-xl text-xs border border-[#FFB0B5]">
+              + 新增 A卡
+            </button>
+          </div>
+        </div>
+
+        <hr class="border-[#FFE8C8]">
+
+        <div>
+          <span class="text-xs font-bold text-pika-blueText block mb-2">🌼 B區 卡片名單管理：</span>
+          <div id="manageCardListB" class="space-y-2"></div>
+          <div class="flex items-center gap-2 mt-2">
+            <input type="text" id="newCardNameB" placeholder="新增 B區卡片名稱..." class="flex-1 px-3 py-1.5 rounded-xl border-2 border-[#FFE8C8] outline-none text-xs font-bold">
+            <button onclick="addNewCustomCard('B')" class="bg-[#E0F7FC] hover:bg-[#BEEBF7] text-pika-blueText font-bold px-3 py-1.5 rounded-xl text-xs border border-[#A5E3F3]">
+              + 新增 B卡
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3">
+        <button onclick="closeCardManageModal()" class="w-full py-2.5 rounded-2xl bg-[#FF7E67] text-white font-bold pika-btn-shadow hover:bg-[#FF6B52]">
+          完成並儲存卡片選單
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: 新增 / 編輯買家 -->
+  <div id="buyerModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 pika-card-border pika-shadow space-y-4 relative">
+      <button onclick="closeBuyerModal()" class="absolute top-4 right-4 text-pika-textSub hover:text-pika-textMain">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+
+      <h3 id="modalTitle" class="text-xl font-bold text-pika-textMain">新增買家資料</h3>
+
+      <form id="buyerForm" onsubmit="handleBuyerSubmit(event)" class="space-y-3">
+        <input type="hidden" id="editBuyerId">
+        <div>
+          <label class="block text-xs font-bold text-pika-textSub mb-1">原始留言順序編號 (#)</label>
+          <input type="number" id="buyerOrderNo" required class="w-full px-4 py-2.5 rounded-2xl border-2 border-[#FFE8C8] focus:border-[#FF7E67] outline-none text-sm font-bold">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-pika-textSub mb-1">買家名稱 / 暱稱</label>
+          <input type="text" id="buyerName" required class="w-full px-4 py-2.5 rounded-2xl border-2 border-[#FFE8C8] focus:border-[#FF7E67] outline-none text-sm font-bold">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-pika-textSub mb-1">喊單詳細內容</label>
+          <textarea id="buyerContent" rows="3" required placeholder="例如: AB波加曼各1+A區皮丘1" class="w-full px-4 py-2.5 rounded-2xl border-2 border-[#FFE8C8] focus:border-[#FF7E67] outline-none text-sm font-bold"></textarea>
+        </div>
+        <div class="pt-2 flex items-center gap-3">
+          <button type="button" onclick="closeBuyerModal()" class="w-1/2 py-2.5 rounded-2xl border-2 border-[#FFE8C8] font-bold text-pika-textSub hover:bg-[#FFFDF2]">
+            取消
+          </button>
+          <button type="submit" class="w-1/2 py-2.5 rounded-2xl bg-[#FF7E67] text-white font-bold pika-btn-shadow hover:bg-[#FF6B52]">
+            儲存買家
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let DEFAULT_CARDS = {
+      A: ['皮卡丘', '波加曼', '炎兔兒', '木木梟', '妙喵', '皮丘', '一對鼠', '小仙奶', '霜奶仙', '基拉祈', '迷你Q', '胖丁', '正負電拍拍'],
+      B: ['皮卡丘', '波加曼', '炎兔兒', '木木梟', '妙喵', '皮丘', '一對鼠', '小卡比', '霜奶仙', '迷你Q', '胖丁', '電飛鼠', '全家福']
+    };
+
+    let DEFAULT_COLD = {
+      A: ['一對鼠', '妙喵', '電飛鼠', '小仙奶', '皮丘'],
+      B: ['妙喵', '一對鼠', '炎兔兒', '小卡比']
+    };
+
+    let DEFAULT_BUYERS = [
+      { id: 21, orderNo: 21, name: '於九里', content: 'AB波加曼各2+AB一對鼠各1+A區小仙奶1+AB妙喵各1+A區電飛鼠1' },
+      { id: 2, orderNo: 2, name: '簡慈萱', content: 'AB 一對鼠 妙貓 迷你Q 小卡比' },
+      { id: 18, orderNo: 18, name: '施姵穎', content: 'A 皮卡丘 皮丘 霜奶仙 迷你Q 電飛鼠 基拉祈 B 皮卡丘 迷你Q 全家福' },
+      { id: 5, orderNo: 5, name: 'Shin Tamed', content: 'A小仙奶、霜奶仙、胖丁、炎兔兒 B胖丁、炎兔兒' },
+      { id: 4, orderNo: 4, name: '婉琪', content: 'AB 波加曼 妙貓 B妙貓' },
+      { id: 19, orderNo: 19, name: '倪瑋翔', content: 'A區 一對鼠 基拉祈 迷你Q B區一對鼠 迷你Q' },
+      { id: 15, orderNo: 15, name: 'Yun yuan', content: 'A波加曼、基拉祈、謎擬Q、小卡比、正電拍拍、負電拍拍、皮丘' },
+      { id: 9, orderNo: 9, name: '葉宜庭', content: 'A 基拉祈 電飛鼠' },
+      { id: 13, orderNo: 13, name: '林子家', content: 'AB小卡比' },
+      { id: 20, orderNo: 20, name: 'Selena Lopez', content: 'AB炎兔兒可全收' },
+      { id: 16, orderNo: 16, name: '結成ゆリ', content: 'AB胖丁 （可收全胖丁）' },
+      { id: 17, orderNo: 17, name: '李毓欽', content: 'A基拉祈 波加曼 小卡比獸 正負電拍拍 胖丁 B波加曼 全家福' },
+      { id: 7, orderNo: 7, name: 'Gokudera', content: 'A皮卡丘，負電拍拍，胖丁，B皮卡丘，胖丁，全家福' },
+      { id: 14, orderNo: 14, name: 'Tea Fish', content: 'A 基拉祈 （最多可收6）' },
+      { id: 1, orderNo: 1, name: 'Cheng Angel', content: 'AB波加曼' },
+      { id: 3, orderNo: 3, name: 'Shiruku', content: 'AB 木木梟' },
+      { id: 8, orderNo: 8, name: '陳珏儜', content: 'AB木木梟' },
+      { id: 11, orderNo: 11, name: 'Xu Yixin', content: 'AB迷你Q' },
+      { id: 6, orderNo: 6, name: '黃怡臻', content: 'A基拉祈' },
+      { id: 10, orderNo: 10, name: '關東組', content: 'A炎兔兒' },
+      { id: 12, orderNo: 12, name: 'Pimi Xiao', content: 'A 霜奶仙' }
+    ];
+
+    let ALL_26_CARDS = JSON.parse(localStorage.getItem('poke_cards')) || DEFAULT_CARDS;
+    let coldRoles = JSON.parse(localStorage.getItem('poke_cold')) || DEFAULT_COLD;
+    let buyersData = JSON.parse(localStorage.getItem('poke_buyers')) || DEFAULT_BUYERS;
+    let matchRecords = JSON.parse(localStorage.getItem('poke_records')) || [];
+
+    function saveDataToStorage() {
+      localStorage.setItem('poke_cards', JSON.stringify(ALL_26_CARDS));
+      localStorage.setItem('poke_cold', JSON.stringify(coldRoles));
+      localStorage.setItem('poke_buyers', JSON.stringify(buyersData));
+      localStorage.setItem('poke_records', JSON.stringify(matchRecords));
+    }
+
+    function resetAllDataToDefault() {
+      if (confirm('確定要將所有買家、卡片與開卡紀錄恢復成初始預設值嗎？')) {
+        localStorage.clear();
+        ALL_26_CARDS = JSON.parse(JSON.stringify(DEFAULT_CARDS));
+        coldRoles = JSON.parse(JSON.stringify(DEFAULT_COLD));
+        buyersData = JSON.parse(JSON.stringify(DEFAULT_BUYERS));
+        matchRecords = [];
+        saveDataToStorage();
+        location.reload();
+      }
+    }
+
+    let expandedBuyerIds = new Set();
+    let showBuyerNotes = true;
+
+    window.onload = () => {
+      lucide.createIcons();
+      saveDataToStorage();
+      renderColdRoleBadges();
+      renderRankings();
+      renderPackCards();
+      renderMatchRecords();
+    };
+
+    function switchTab(tab) {
+      const rankTab = document.getElementById('rankTab');
+      const packTab = document.getElementById('packTab');
+      const tabRankBtn = document.getElementById('tabRankBtn');
+      const tabPackBtn = document.getElementById('tabPackBtn');
+
+      if (tab === 'rank') {
+        rankTab.classList.remove('hidden');
+        packTab.classList.add('hidden');
+        tabRankBtn.className = "px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all bg-[#FF7E67] text-white pika-btn-shadow";
+        tabPackBtn.className = "px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all text-pika-textMain hover:bg-[#FFF3B8]";
+      } else {
+        rankTab.classList.add('hidden');
+        packTab.classList.remove('hidden');
+        tabPackBtn.className = "px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all bg-[#FF7E67] text-white pika-btn-shadow";
+        tabRankBtn.className = "px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all text-pika-textMain hover:bg-[#FFF3B8]";
+      }
+    }
+
+    function toggleGlobalNotes() {
+      showBuyerNotes = !showBuyerNotes;
+      const btn = document.getElementById('toggleNotesBtn');
+      if (showBuyerNotes) {
+        btn.innerHTML = `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i><span>隱藏買家備註</span>`;
+      } else {
+        btn.innerHTML = `<i data-lucide="eye" class="w-3.5 h-3.5"></i><span>顯示買家備註</span>`;
+      }
+      renderRankings();
+    }
+
+    function getBuyerCardRequirement(buyer, zone, role) {
+      const text = buyer.content;
+      const roleKey = role.replace('迷你Q', '謎擬Q');
+
+      if (buyer.id === 4) {
+        if (role === '波加曼') return 1;
+        if (role === '妙喵' || role === '妙貓') {
+          return zone === 'A' ? 1 : 2;
+        }
+      }
+
+      if (buyer.id === 16) {
+        if (role === '胖丁') return 10; 
+      }
+
+      if (buyer.id === 21) {
+        if (role === '波加曼') return 2;
+        if (role === '一對鼠' || role === '妙喵') return 1;
+        if (zone === 'A' && (role === '小仙奶' || role === '電飛鼠')) return 1;
+      }
+
+      if (buyer.id === 14 && zone === 'A' && role === '基拉祈') {
+        return 6;
+      }
+
+      const hasZoneMention = text.includes(`${zone}區`) || text.includes(`${zone} `) || text.includes('AB') || text.includes('全');
+      const hasRoleMention = text.includes(role) || text.includes(roleKey) || text.includes(role.replace('妙喵', '妙貓'));
+
+      if (hasZoneMention && hasRoleMention) {
+        if (text.includes(`${role}各2`) || text.includes(`${role}2`)) return 2;
+        return 1;
+      }
+
+      if (!text.includes('A區') && !text.includes('B區') && !text.includes('AB')) {
+        if (hasRoleMention) {
+          if (text.includes(`A ${role}`) || text.includes(`A區 ${role}`) || text.includes(`A${role}`)) {
+            return zone === 'A' ? 1 : 0;
+          }
+          if (text.includes(`B ${role}`) || text.includes(`B區 ${role}`) || text.includes(`B${role}`)) {
+            return zone === 'B' ? 1 : 0;
+          }
+          return 1;
+        }
+      }
+
+      return 0;
+    }
+
+    function parseBuyerOrder(buyer) {
+      const text = buyer.content;
+      let coldCount = 0;
+      let totalQty = 0;
+      let itemsA = [];
+      let itemsB = [];
+
+      ALL_26_CARDS.A.forEach(role => {
+        const req = getBuyerCardRequirement(buyer, 'A', role);
+        if (req > 0) {
+          for (let i = 0; i < req; i++) itemsA.push(role);
+          totalQty += req;
+          if (coldRoles.A.includes(role)) coldCount += req;
+        }
+      });
+
+      ALL_26_CARDS.B.forEach(role => {
+        const req = getBuyerCardRequirement(buyer, 'B', role);
+        if (req > 0) {
+          for (let i = 0; i < req; i++) itemsB.push(role);
+          totalQty += req;
+          if (coldRoles.B.includes(role)) coldCount += req;
+        }
+      });
+
+      if (totalQty === 0) totalQty = 1;
+
+      return { coldCount, totalQty, itemsA, itemsB };
+    }
+
+    function getSortedBuyers() {
+      return buyersData.map(b => {
+        const parsed = parseBuyerOrder(b);
+        return {
+          ...b,
+          coldCount: parsed.coldCount,
+          totalQty: parsed.totalQty,
+          itemsA: parsed.itemsA,
+          itemsB: parsed.itemsB
+        };
+      }).sort((a, b) => {
+        if (b.coldCount !== a.coldCount) return b.coldCount - a.coldCount;
+        if (b.totalQty !== a.totalQty) return b.totalQty - a.totalQty;
+        return a.orderNo - b.orderNo;
+      });
+    }
+
+    function renderColdRoleBadges() {
+      const containerA = document.getElementById('coldAContainer');
+      const containerB = document.getElementById('coldBContainer');
+
+      containerA.innerHTML = ALL_26_CARDS.A.map(role => {
+        const isCold = coldRoles.A.includes(role);
+        return `
+          <button onclick="toggleColdRole('A', '${role}')" class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${isCold ? 'bg-[#FFDEE2] text-[#FF7E67] border border-[#FFB0B5]' : 'bg-white text-pika-textSub border border-[#FFE8C8]'}">
+            ${role}
+          </button>
+        `;
+      }).join('');
+
+      containerB.innerHTML = ALL_26_CARDS.B.map(role => {
+        const isCold = coldRoles.B.includes(role);
+        return `
+          <button onclick="toggleColdRole('B', '${role}')" class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${isCold ? 'bg-[#FFDEE2] text-[#FF7E67] border border-[#FFB0B5]' : 'bg-white text-pika-textSub border border-[#FFE8C8]'}">
+            ${role}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function toggleColdRole(zone, role) {
+      if (coldRoles[zone].includes(role)) {
+        coldRoles[zone] = coldRoles[zone].filter(r => r !== role);
+      } else {
+        coldRoles[zone].push(role);
+      }
+      saveDataToStorage();
+      renderColdRoleBadges();
+      renderRankings();
+    }
+
+    function renderRankings() {
+      const sorted = getSortedBuyers();
+      const accordion = document.getElementById('accordionBuyerList');
+      document.getElementById('buyerTotalBadge').innerText = `共 ${sorted.length} 位買家`;
+
+      accordion.innerHTML = sorted.map((b, idx) => {
+        const rank = idx + 1;
+        const isExpanded = expandedBuyerIds.has(b.id);
+
+        return `
+          <div class="bg-[#FFFDF2] rounded-2xl border-2 border-[#FFE8C8] overflow-hidden transition-all shadow-sm">
+            <div onclick="toggleAccordion(${b.id})" class="p-4 bg-white hover:bg-[#FFFDF2] cursor-pointer flex items-center justify-between transition-all select-none border-b border-[#FFE8C8]">
+              <div class="flex items-center gap-3">
+                <span class="bg-[#FF7E67] text-white font-title-style font-bold text-sm px-3 py-1 rounded-xl">
+                  第 ${rank} 順位
+                </span>
+                <span class="text-xs font-bold text-pika-textSub">#${b.orderNo}</span>
+                <h4 class="font-bold text-pika-textMain text-base md:text-lg">${b.name}</h4>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="hidden sm:flex items-center gap-2 text-xs">
+                  <span class="${b.coldCount > 0 ? 'bg-[#FFF3B8] text-pika-textMain border border-[#F7C948]' : 'bg-gray-100 text-gray-500'} font-bold px-2.5 py-1 rounded-lg">
+                    冷門：${b.coldCount} 個
+                  </span>
+                  <span class="bg-[#E0F7FC] text-pika-blueText font-bold px-2.5 py-1 rounded-lg">
+                    總數：${b.totalQty} 張
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+                  <button onclick="openEditBuyerModal(${b.id})" class="p-1.5 rounded-lg hover:bg-[#FFEAEB] text-pika-accent">
+                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                  </button>
+                  <button onclick="deleteBuyer(${b.id})" class="p-1.5 rounded-lg hover:bg-red-50 text-red-400">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  </button>
+                </div>
+
+                <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="w-5 h-5 text-pika-accent transition-transform"></i>
+              </div>
+            </div>
+
+            ${isExpanded ? `
+              <div class="p-4 space-y-3 bg-[#FFFDF2] border-t border-[#FFE8C8]">
+                ${showBuyerNotes ? `
+                  <div class="bg-white p-3 rounded-xl border border-[#FFE8C8]">
+                    <span class="text-xs font-bold text-pika-textSub block mb-1">喊單原文備註：</span>
+                    <p class="text-sm font-bold text-pika-textMain">${b.content}</p>
+                  </div>
+                ` : ''}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div class="bg-white p-3 rounded-2xl border-2 border-[#FFE8C8]">
+                    <span class="text-xs font-bold text-[#FF7E67] block mb-2 pb-1 border-b border-[#FFE8C8]">🌸 A區 喊單品項 (${b.itemsA.length} 個)：</span>
+                    ${b.itemsA.length > 0 ? `
+                      <div class="flex flex-wrap gap-1.5">
+                        ${b.itemsA.map(item => `
+                          <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${coldRoles.A.includes(item) ? 'bg-[#FFDEE2] text-[#FF7E67] border border-[#FFB0B5]' : 'bg-[#FFF3B8] text-pika-textMain'}">
+                            ${item}
+                          </span>
+                        `).join('')}
+                      </div>
+                    ` : '<span class="text-xs text-pika-textSub font-bold">無 A區 品項</span>'}
+                  </div>
+
+                  <div class="bg-white p-3 rounded-2xl border-2 border-[#FFE8C8]">
+                    <span class="text-xs font-bold text-pika-blueText block mb-2 pb-1 border-b border-[#FFE8C8]">🌼 B區 喊單品項 (${b.itemsB.length} 個)：</span>
+                    ${b.itemsB.length > 0 ? `
+                      <div class="flex flex-wrap gap-1.5">
+                        ${b.itemsB.map(item => `
+                          <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${coldRoles.B.includes(item) ? 'bg-[#FFDEE2] text-[#FF7E67] border border-[#FFB0B5]' : 'bg-[#E0F7FC] text-pika-blueText'}">
+                            ${item}
+                          </span>
+                        `).join('')}
+                      </div>
+                    ` : '<span class="text-xs text-pika-textSub font-bold">無 B區 品項</span>'}
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+      renderBuyerProgress();
+    }
+
+    function toggleAccordion(id) {
+      if (expandedBuyerIds.has(id)) {
+        expandedBuyerIds.delete(id);
+      } else {
+        expandedBuyerIds.add(id);
+      }
+      renderRankings();
+    }
+
+    function expandAllAccordion(expand) {
+      if (expand) {
+        buyersData.forEach(b => expandedBuyerIds.add(b.id));
+      } else {
+        expandedBuyerIds.clear();
+      }
+      renderRankings();
+    }
+
+    function openCardManageModal() {
+      renderManageCardLists();
+      document.getElementById('cardManageModal').classList.remove('hidden');
+    }
+
+    function closeCardManageModal() {
+      document.getElementById('cardManageModal').classList.add('hidden');
+      saveDataToStorage();
+      renderColdRoleBadges();
+      renderRankings();
+      renderPackCards();
+    }
+
+    function renderManageCardLists() {
+      const listA = document.getElementById('manageCardListA');
+      const listB = document.getElementById('manageCardListB');
+
+      listA.innerHTML = ALL_26_CARDS.A.map((role, idx) => `
+        <div class="flex items-center gap-2">
+          <input type="text" value="${role}" onchange="updateCardName('A', ${idx}, this.value)" class="flex-1 px-3 py-1.5 rounded-xl border border-[#FFE8C8] outline-none text-xs font-bold">
+          <button onclick="removeCard('A', ${idx})" class="text-red-400 hover:text-red-600 p-1">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+
+      listB.innerHTML = ALL_26_CARDS.B.map((role, idx) => `
+        <div class="flex items-center gap-2">
+          <input type="text" value="${role}" onchange="updateCardName('B', ${idx}, this.value)" class="flex-1 px-3 py-1.5 rounded-xl border border-[#FFE8C8] outline-none text-xs font-bold">
+          <button onclick="removeCard('B', ${idx})" class="text-red-400 hover:text-red-600 p-1">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function updateCardName(zone, idx, newName) {
+      if (newName.trim()) {
+        ALL_26_CARDS[zone][idx] = newName.trim();
+        saveDataToStorage();
+      }
+    }
+
+    function removeCard(zone, idx) {
+      ALL_26_CARDS[zone].splice(idx, 1);
+      saveDataToStorage();
+      renderManageCardLists();
+    }
+
+    function addNewCustomCard(zone) {
+      const input = document.getElementById(`newCardName${zone}`);
+      const val = input.value.trim();
+      if (val) {
+        ALL_26_CARDS[zone].push(val);
+        saveDataToStorage();
+        input.value = '';
+        renderManageCardLists();
+      }
+    }
+
+    function renderPackCards() {
+      const packA = document.getElementById('packCardsA');
+      const packB = document.getElementById('packCardsB');
+
+      packA.innerHTML = ALL_26_CARDS.A.map(role => `
+        <button onclick="handleDrawCard('A', '${role}')" class="px-3 py-2 rounded-2xl bg-[#FFF3B8] hover:bg-[#F7C948] text-pika-textMain font-bold text-xs border border-[#F7C948] pika-btn-shadow transition-all">
+          A區 ${role}
+        </button>
+      `).join('');
+
+      packB.innerHTML = ALL_26_CARDS.B.map(role => `
+        <button onclick="handleDrawCard('B', '${role}')" class="px-3 py-2 rounded-2xl bg-[#E0F7FC] hover:bg-[#BEEBF7] text-pika-blueText font-bold text-xs border border-[#A5E3F3] pika-btn-shadow transition-all">
+          B區 ${role}
+        </button>
+      `).join('');
+    }
+
+    function handleDrawCard(zone, role) {
+      const sorted = getSortedBuyers();
+      let matchedBuyer = null;
+
+      for (let b of sorted) {
+        const totalNeeded = getBuyerCardRequirement(b, zone, role);
+
+        if (totalNeeded > 0) {
+          const currentReceived = matchRecords.filter(r => r.buyerName === b.name && r.zone === zone && r.role === role).length;
+
+          if (currentReceived < totalNeeded) {
+            matchedBuyer = b;
+            break;
+          }
+        }
+      }
+
+      const newRecord = {
+        id: Date.now() + Math.random(),
+        zone,
+        role,
+        buyerName: matchedBuyer ? matchedBuyer.name : '自留 / 可釋出',
+        buyerOrderNo: matchedBuyer ? matchedBuyer.orderNo : null,
+        time: new Date().toLocaleTimeString('zh-TW', { hour12: false })
+      };
+
+      matchRecords.unshift(newRecord);
+      saveDataToStorage();
+      renderMatchRecords();
+      renderBuyerProgress();
+      renderOpenedSummary();
+    }
+
+    function handleManualDraw() {
+      const zone = document.getElementById('manualZoneSelect').value;
+      const input = document.getElementById('manualCardInput');
+      const rawVal = input.value.trim();
+
+      if (!rawVal) {
+        alert('請輸入卡片名稱！');
+        return;
+      }
+
+      let roleName = rawVal;
+      let count = 1;
+
+      const match = rawVal.match(/^(.+?)[\s*xX]*(\d+)$/);
+      if (match) {
+        roleName = match[1].trim();
+        count = parseInt(match[2], 10) || 1;
+      }
+
+      for (let i = 0; i < count; i++) {
+        handleDrawCard(zone, roleName);
+      }
+
+      input.value = '';
+    }
+
+    function renderOpenedSummary() {
+      const summaryContainer = document.getElementById('openedCardsSummary');
+      document.getElementById('totalOpenedBadge').innerText = `總計 ${matchRecords.length} 張`;
+
+      if (matchRecords.length === 0) {
+        summaryContainer.innerHTML = `<span class="text-xs text-pika-textSub">尚未開出任何卡片</span>`;
+        return;
+      }
+
+      const counts = {};
+      matchRecords.forEach(r => {
+        const key = `[${r.zone}] ${r.role}`;
+        counts[key] = (counts[key] || 0) + 1;
+      });
+
+      summaryContainer.innerHTML = Object.entries(counts).map(([cardKey, count]) => `
+        <span class="px-3 py-1.5 rounded-xl bg-[#FFF3B8] border border-[#F7C948] text-xs font-bold text-pika-textMain shadow-sm">
+          ${cardKey}：<span class="text-[#FF7E67] font-extrabold">${count}</span> 張
+        </span>
+      `).join('');
+    }
+
+    function renderMatchRecords() {
+      const list = document.getElementById('matchLogList');
+      document.getElementById('recordCountBadge').innerText = `已錄入 ${matchRecords.length} 張`;
+
+      if (matchRecords.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-10 text-pika-textSub text-sm">
+            <i data-lucide="sparkles" class="w-8 h-8 text-[#FFD2A6] mx-auto mb-2"></i>
+            尚未開卡，點擊上方卡片開始分配卡片！
+          </div>
+        `;
+        lucide.createIcons();
+        renderOpenedSummary();
+        return;
+      }
+
+      list.innerHTML = matchRecords.map(rec => `
+        <div class="bg-[#FFFDF2] p-3 rounded-2xl border border-[#FFE8C8] flex items-center justify-between text-sm">
+          <div class="flex items-center gap-2">
+            <span class="font-bold px-2 py-0.5 rounded-lg text-xs ${rec.zone === 'A' ? 'bg-[#FFF3B8] text-pika-textMain' : 'bg-[#E0F7FC] text-pika-blueText'}">
+              ${rec.zone}區 ${rec.role}
+            </span>
+            <span class="font-bold text-pika-textMain">➡️ 出貨給：</span>
+            <span class="font-bold text-pika-accent">${rec.buyerName} ${rec.buyerOrderNo ? `(#${rec.buyerOrderNo})` : ''}</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-pika-textSub">${rec.time}</span>
+            <button onclick="deleteSingleRecord(${rec.id})" class="text-red-400 hover:text-red-600 p-1">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+      renderOpenedSummary();
+    }
+
+    function deleteSingleRecord(id) {
+      matchRecords = matchRecords.filter(r => r.id !== id);
+      saveDataToStorage();
+      renderMatchRecords();
+      renderBuyerProgress();
+    }
+
+    function clearMatchRecords() {
+      if (confirm('確定要清空所有出貨分配紀錄嗎？')) {
+        matchRecords = [];
+        saveDataToStorage();
+        renderMatchRecords();
+        renderBuyerProgress();
+      }
+    }
+
+    function renderBuyerProgress() {
+      const sorted = getSortedBuyers();
+      const progressContainer = document.getElementById('buyerProgressList');
+
+      progressContainer.innerHTML = sorted.map((b, idx) => {
+        const receivedCount = matchRecords.filter(r => r.buyerName === b.name).length;
+        return `
+          <div class="bg-[#FFFDF2] p-3 rounded-2xl border border-[#FFE8C8] space-y-1">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-pika-textMain">第 ${idx + 1} 順位 #${b.orderNo} ${b.name}</span>
+              <span class="font-bold text-pika-accent">已配 ${receivedCount} / ${b.totalQty} 張</span>
+            </div>
+            <p class="text-[11px] text-pika-textSub truncate">${b.content}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openAddBuyerModal() {
+      document.getElementById('modalTitle').innerText = '新增買家資料';
+      document.getElementById('editBuyerId').value = '';
+      document.getElementById('buyerOrderNo').value = buyersData.length + 1;
+      document.getElementById('buyerName').value = '';
+      document.getElementById('buyerContent').value = '';
+      document.getElementById('buyerModal').classList.remove('hidden');
+    }
+
+    function openEditBuyerModal(id) {
+      const buyer = buyersData.find(b => b.id === id);
+      if (!buyer) return;
+
+      document.getElementById('modalTitle').innerText = '編輯買家資料';
+      document.getElementById('editBuyerId').value = buyer.id;
+      document.getElementById('buyerOrderNo').value = buyer.orderNo;
+      document.getElementById('buyerName').value = buyer.name;
+      document.getElementById('buyerContent').value = buyer.content;
+      document.getElementById('buyerModal').classList.remove('hidden');
+    }
+
+    function closeBuyerModal() {
+      document.getElementById('buyerModal').classList.add('hidden');
+    }
+
+    function handleBuyerSubmit(e) {
+      e.preventDefault();
+      const editId = document.getElementById('editBuyerId').value;
+      const orderNo = parseInt(document.getElementById('buyerOrderNo').value);
+      const name = document.getElementById('buyerName').value.trim();
+      const content = document.getElementById('buyerContent').value.trim();
+
+      if (editId) {
+        buyersData = buyersData.map(b => b.id === parseInt(editId) ? { ...b, orderNo, name, content } : b);
+      } else {
+        buyersData.push({
+          id: Date.now(),
+          orderNo,
+          name,
+          content
+        });
+      }
+
+      saveDataToStorage();
+      closeBuyerModal();
+      renderRankings();
+    }
+
+    function deleteBuyer(id) {
+      if (confirm('確定要刪除這位買家嗎？')) {
+        buyersData = buyersData.filter(b => b.id !== id);
+        saveDataToStorage();
+        renderRankings();
+      }
+    }
+  </script>
+</body>
+</html>
