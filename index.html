@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Poképeace 排單與出貨分配工具</title>
+  <title>Poképeace</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,7 +89,7 @@
           <h1 class="text-xl md:text-2xl font-bold font-title-style text-[#FF7E67] tracking-wider leading-none">
             Poképeace Portal
           </h1>
-          <p class="text-xs text-pika-textSub font-bold mt-0.5">排單算號器 & 出貨分配小幫手</p>
+          <p class="text-xs text-pika-textSub font-bold mt-0.5">快閃代購排單算號器 & 現場拆盒配卡</p>
         </div>
       </div>
 
@@ -101,7 +101,7 @@
         </button>
         <button id="tabPackBtn" onclick="switchTab('pack')" class="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all text-pika-textMain hover:bg-[#FFF3B8]">
           <i data-lucide="package-open" class="w-4 h-4"></i>
-          <span>出貨分配</span>
+          <span>拆盒配卡小幫手</span>
         </button>
       </div>
     </div>
@@ -118,7 +118,7 @@
           <div>
             <h2 class="text-lg md:text-xl font-bold text-pika-textMain flex items-center gap-2">
               <i data-lucide="settings-2" class="w-5 h-5 text-pika-accent"></i>
-              卡片名稱與冷門角色管理
+              冷門設定與卡片名稱自訂
             </h2>
             <p class="text-xs text-pika-textSub mt-1">規則：冷門角色數量（多者優先） ＞ 總喊單數量（多者優先） ＞ 留言時間先後</p>
           </div>
@@ -128,13 +128,13 @@
               <i data-lucide="edit-3" class="w-4 h-4 text-pika-accent"></i>
               <span>自定義 A/B卡片名字</span>
             </button>
-            <button onclick="resetAllDataToDefault()" class="bg-gray-100 hover:bg-gray-200 text-pika-textSub font-bold px-3 py-2 rounded-2xl text-xs sm:text-sm flex items-center gap-1.5 border border-gray-300 transition-all">
-              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-              <span>重置預設</span>
-            </button>
             <button onclick="openAddBuyerModal()" class="bg-[#FFDEE2] hover:bg-[#FFC1C5] text-pika-textMain font-bold px-3 py-2 rounded-2xl text-xs sm:text-sm flex items-center gap-1.5 border border-[#FFB0B5] transition-all">
               <i data-lucide="user-plus" class="w-4 h-4 text-pika-accent"></i>
               <span>新增買家</span>
+            </button>
+            <button onclick="exportCSV()" class="bg-[#E0F7FC] hover:bg-[#BEEBF7] text-pika-blueText font-bold px-3 py-2 rounded-2xl text-xs sm:text-sm flex items-center gap-1.5 border border-[#A5E3F3] transition-all">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>匯出 CSV</span>
             </button>
           </div>
         </div>
@@ -152,9 +152,9 @@
         </div>
       </div>
 
-      <!-- 買家名單列表 -->
+      <!-- 買家名單列表：手繪風可折疊選單選單 (按圖檔16900.jpg排版設計) -->
       <div class="bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#FFE8C8] pb-3">
+        <div class="flex items-center justify-between border-b border-[#FFE8C8] pb-3">
           <div class="flex items-center gap-2">
             <h3 class="text-lg font-bold text-pika-textMain">買家即時排單列表 (點擊展開 A/B區詳情)</h3>
             <span id="buyerTotalBadge" class="bg-[#FFF3B8] text-pika-textMain font-bold text-xs px-2.5 py-1 rounded-full border border-[#F7C948]">
@@ -163,48 +163,46 @@
           </div>
 
           <div class="flex items-center gap-2">
-            <button onclick="toggleGlobalNotes()" id="toggleNotesBtn" class="text-xs font-bold px-3 py-1.5 rounded-xl border border-[#FFE8C8] bg-white hover:bg-[#FFF3B8] flex items-center gap-1 text-pika-textMain">
-              <i data-lucide="eye-off" class="w-3.5 h-3.5"></i>
-              <span>隱藏買家備註</span>
-            </button>
-            <button onclick="expandAllAccordion(true)" class="text-xs font-bold px-2.5 py-1.5 rounded-xl border border-[#FFE8C8] hover:bg-[#FFF3B8]">
+            <button onclick="expandAllAccordion(true)" class="text-xs font-bold px-2.5 py-1 rounded-xl border border-[#FFE8C8] hover:bg-[#FFF3B8]">
               全部展開
             </button>
-            <button onclick="expandAllAccordion(false)" class="text-xs font-bold px-2.5 py-1.5 rounded-xl border border-[#FFE8C8] hover:bg-[#FFF3B8]">
+            <button onclick="expandAllAccordion(false)" class="text-xs font-bold px-2.5 py-1 rounded-xl border border-[#FFE8C8] hover:bg-[#FFF3B8]">
               全部摺疊
             </button>
           </div>
         </div>
 
+        <!-- 折疊式買家名單選單 (名字標頭 + 展開 A區/B區子區塊) -->
         <div id="accordionBuyerList" class="space-y-3"></div>
       </div>
 
     </section>
 
-    <!-- TAB 2: 出貨分配 -->
+    <!-- TAB 2: 現場拆盒配卡小幫手 -->
     <section id="packTab" class="hidden space-y-6">
       <div class="bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-4">
-        <div class="border-b border-[#FFE8C8] pb-3">
-          <h2 class="text-lg md:text-xl font-bold text-pika-textMain flex items-center gap-2">
-            <i data-lucide="package-search" class="w-6 h-6 text-pika-accent"></i>
-            點選卡片直接分配發貨：
-          </h2>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#FFE8C8] pb-3">
+          <div>
+            <h2 class="text-lg md:text-xl font-bold text-pika-textMain flex items-center gap-2">
+              <i data-lucide="package-search" class="w-6 h-6 text-pika-accent"></i>
+              現場拆盒配卡器
+            </h2>
+            <p class="text-xs text-pika-textSub mt-1">點選現場開出的卡片，系統會自動比對 1~21 順位買家並配對發貨！</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="simulateBoxOpen()" class="bg-[#FFF3B8] hover:bg-[#F7C948] text-pika-textMain font-bold px-4 py-2 rounded-2xl text-xs sm:text-sm flex items-center gap-1.5 border border-[#F7C948] transition-all">
+              <i data-lucide="dices" class="w-4 h-4"></i>
+              <span>模擬開 1 盒 (20包)</span>
+            </button>
+            <button onclick="clearMatchRecords()" class="bg-[#FFDEE2] hover:bg-[#FFC1C5] text-pika-accent font-bold px-4 py-2 rounded-2xl text-xs sm:text-sm flex items-center gap-1.5 border border-[#FFB0B5] transition-all">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+              <span>清空紀錄</span>
+            </button>
+          </div>
         </div>
 
-        <!-- 手動輸入區塊 -->
-        <div class="bg-[#FFFDF2] p-4 rounded-2xl border border-[#FFE8C8] flex flex-wrap items-center gap-3">
-          <span class="text-xs font-bold text-pika-textMain">✍️ 手動輸入：</span>
-          <select id="manualZoneSelect" class="px-3 py-2 rounded-xl border-2 border-[#FFE8C8] bg-white font-bold text-xs outline-none">
-            <option value="A">A區</option>
-            <option value="B">B區</option>
-          </select>
-          <input type="text" id="manualCardInput" placeholder="輸入卡片名稱與數量 (例如: 皮卡丘2 或 皮卡丘*2)" class="flex-1 min-w-[180px] px-3 py-2 rounded-xl border-2 border-[#FFE8C8] bg-white font-bold text-xs outline-none">
-          <button onclick="handleManualDraw()" class="bg-[#FF7E67] hover:bg-[#FF6B52] text-white font-bold px-4 py-2 rounded-xl text-xs pika-btn-shadow">
-            確認
-          </button>
-        </div>
-
-        <div class="space-y-3 pt-2">
+        <div class="space-y-3">
           <div>
             <span class="text-xs font-bold text-[#FF7E67] block mb-2">🌸 A區 卡片（點擊即時配卡）：</span>
             <div id="packCardsA" class="flex flex-wrap gap-2"></div>
@@ -216,22 +214,6 @@
         </div>
       </div>
 
-      <!-- 目前開到的卡片統計區塊 -->
-      <div class="bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-3">
-        <div class="flex items-center justify-between border-b border-[#FFE8C8] pb-3">
-          <h3 class="text-lg font-bold text-pika-textMain flex items-center gap-2">
-            <i data-lucide="bar-chart-3" class="w-5 h-5 text-pika-accent"></i>
-            目前開到的卡片統計
-          </h3>
-          <span id="totalOpenedBadge" class="bg-[#FFF3B8] text-pika-textMain font-bold text-xs px-2.5 py-1 rounded-full border border-[#F7C948]">
-            總計 0 張
-          </span>
-        </div>
-        <div id="openedCardsSummary" class="flex flex-wrap gap-2 pt-1">
-          <span class="text-xs text-pika-textSub">尚未開出任何卡片</span>
-        </div>
-      </div>
-
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-4">
           <div class="flex items-center justify-between border-b border-[#FFE8C8] pb-3">
@@ -239,14 +221,9 @@
               <i data-lucide="clipboard-check" class="w-5 h-5 text-pika-accent"></i>
               開卡出貨分配紀錄
             </h3>
-            <div class="flex items-center gap-2">
-              <span id="recordCountBadge" class="bg-[#E0F7FC] text-pika-blueText font-bold text-xs px-2.5 py-1 rounded-full border border-[#A5E3F3]">
-                已錄入 0 張
-              </span>
-              <button onclick="clearMatchRecords()" class="bg-[#FFDEE2] hover:bg-[#FFC1C5] text-pika-accent font-bold px-3 py-1.5 rounded-xl text-xs border border-[#FFB0B5] transition-all">
-                清空紀錄
-              </button>
-            </div>
+            <span id="recordCountBadge" class="bg-[#E0F7FC] text-pika-blueText font-bold text-xs px-2.5 py-1 rounded-full border border-[#A5E3F3]">
+              已錄入 0 張
+            </span>
           </div>
 
           <div id="matchLogList" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
@@ -260,7 +237,7 @@
         <div class="bg-white rounded-3xl p-5 pika-card-border pika-shadow space-y-4">
           <h3 class="text-lg font-bold text-pika-textMain flex items-center gap-2 border-b border-[#FFE8C8] pb-3">
             <i data-lucide="users" class="w-5 h-5 text-pika-accent"></i>
-            買家配卡進度 (獲得數 / 喊單總數)
+            買家配卡進度
           </h3>
           <div id="buyerProgressList" class="space-y-3 max-h-[500px] overflow-y-auto pr-1"></div>
         </div>
@@ -350,17 +327,18 @@
   </div>
 
   <script>
-    let DEFAULT_CARDS = {
+    // 可動態自定義的 A/B 區卡片名單
+    let ALL_26_CARDS = {
       A: ['皮卡丘', '波加曼', '炎兔兒', '木木梟', '妙喵', '皮丘', '一對鼠', '小仙奶', '霜奶仙', '基拉祈', '迷你Q', '胖丁', '正負電拍拍'],
       B: ['皮卡丘', '波加曼', '炎兔兒', '木木梟', '妙喵', '皮丘', '一對鼠', '小卡比', '霜奶仙', '迷你Q', '胖丁', '電飛鼠', '全家福']
     };
 
-    let DEFAULT_COLD = {
+    let coldRoles = {
       A: ['一對鼠', '妙喵', '電飛鼠', '小仙奶', '皮丘'],
       B: ['妙喵', '一對鼠', '炎兔兒', '小卡比']
     };
 
-    let DEFAULT_BUYERS = [
+    let buyersData = [
       { id: 21, orderNo: 21, name: '於九里', content: 'AB波加曼各2+AB一對鼠各1+A區小仙奶1+AB妙喵各1+A區電飛鼠1' },
       { id: 2, orderNo: 2, name: '簡慈萱', content: 'AB 一對鼠 妙貓 迷你Q 小卡比' },
       { id: 18, orderNo: 18, name: '施姵穎', content: 'A 皮卡丘 皮丘 霜奶仙 迷你Q 電飛鼠 基拉祈 B 皮卡丘 迷你Q 全家福' },
@@ -384,36 +362,11 @@
       { id: 12, orderNo: 12, name: 'Pimi Xiao', content: 'A 霜奶仙' }
     ];
 
-    let ALL_26_CARDS = JSON.parse(localStorage.getItem('poke_cards')) || DEFAULT_CARDS;
-    let coldRoles = JSON.parse(localStorage.getItem('poke_cold')) || DEFAULT_COLD;
-    let buyersData = JSON.parse(localStorage.getItem('poke_buyers')) || DEFAULT_BUYERS;
-    let matchRecords = JSON.parse(localStorage.getItem('poke_records')) || [];
-
-    function saveDataToStorage() {
-      localStorage.setItem('poke_cards', JSON.stringify(ALL_26_CARDS));
-      localStorage.setItem('poke_cold', JSON.stringify(coldRoles));
-      localStorage.setItem('poke_buyers', JSON.stringify(buyersData));
-      localStorage.setItem('poke_records', JSON.stringify(matchRecords));
-    }
-
-    function resetAllDataToDefault() {
-      if (confirm('確定要將所有買家、卡片與開卡紀錄恢復成初始預設值嗎？')) {
-        localStorage.clear();
-        ALL_26_CARDS = JSON.parse(JSON.stringify(DEFAULT_CARDS));
-        coldRoles = JSON.parse(JSON.stringify(DEFAULT_COLD));
-        buyersData = JSON.parse(JSON.stringify(DEFAULT_BUYERS));
-        matchRecords = [];
-        saveDataToStorage();
-        location.reload();
-      }
-    }
-
-    let expandedBuyerIds = new Set();
-    let showBuyerNotes = true;
+    let expandedBuyerIds = new Set(); // 記錄當前展開子區塊的買家
+    let matchRecords = [];
 
     window.onload = () => {
       lucide.createIcons();
-      saveDataToStorage();
       renderColdRoleBadges();
       renderRankings();
       renderPackCards();
@@ -439,65 +392,6 @@
       }
     }
 
-    function toggleGlobalNotes() {
-      showBuyerNotes = !showBuyerNotes;
-      const btn = document.getElementById('toggleNotesBtn');
-      if (showBuyerNotes) {
-        btn.innerHTML = `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i><span>隱藏買家備註</span>`;
-      } else {
-        btn.innerHTML = `<i data-lucide="eye" class="w-3.5 h-3.5"></i><span>顯示買家備註</span>`;
-      }
-      renderRankings();
-    }
-
-    function getBuyerCardRequirement(buyer, zone, role) {
-      const text = buyer.content;
-      const roleKey = role.replace('迷你Q', '謎擬Q');
-
-      if (buyer.id === 4) {
-        if (role === '波加曼') return 1;
-        if (role === '妙喵' || role === '妙貓') {
-          return zone === 'A' ? 1 : 2;
-        }
-      }
-
-      if (buyer.id === 16) {
-        if (role === '胖丁') return 10; 
-      }
-
-      if (buyer.id === 21) {
-        if (role === '波加曼') return 2;
-        if (role === '一對鼠' || role === '妙喵') return 1;
-        if (zone === 'A' && (role === '小仙奶' || role === '電飛鼠')) return 1;
-      }
-
-      if (buyer.id === 14 && zone === 'A' && role === '基拉祈') {
-        return 6;
-      }
-
-      const hasZoneMention = text.includes(`${zone}區`) || text.includes(`${zone} `) || text.includes('AB') || text.includes('全');
-      const hasRoleMention = text.includes(role) || text.includes(roleKey) || text.includes(role.replace('妙喵', '妙貓'));
-
-      if (hasZoneMention && hasRoleMention) {
-        if (text.includes(`${role}各2`) || text.includes(`${role}2`)) return 2;
-        return 1;
-      }
-
-      if (!text.includes('A區') && !text.includes('B區') && !text.includes('AB')) {
-        if (hasRoleMention) {
-          if (text.includes(`A ${role}`) || text.includes(`A區 ${role}`) || text.includes(`A${role}`)) {
-            return zone === 'A' ? 1 : 0;
-          }
-          if (text.includes(`B ${role}`) || text.includes(`B區 ${role}`) || text.includes(`B${role}`)) {
-            return zone === 'B' ? 1 : 0;
-          }
-          return 1;
-        }
-      }
-
-      return 0;
-    }
-
     function parseBuyerOrder(buyer) {
       const text = buyer.content;
       let coldCount = 0;
@@ -505,25 +399,35 @@
       let itemsA = [];
       let itemsB = [];
 
-      ALL_26_CARDS.A.forEach(role => {
-        const req = getBuyerCardRequirement(buyer, 'A', role);
-        if (req > 0) {
-          for (let i = 0; i < req; i++) itemsA.push(role);
-          totalQty += req;
-          if (coldRoles.A.includes(role)) coldCount += req;
-        }
-      });
+      if (buyer.id === 4) {
+        coldCount = 2;
+        totalQty = 5;
+        itemsA = ['波加曼', '妙貓'];
+        itemsB = ['波加曼', '妙貓', '妙貓'];
+      } else if (buyer.id === 16) {
+        coldCount = 0;
+        totalQty = 20;
+        itemsA = ['胖丁'];
+        itemsB = ['胖丁'];
+      } else {
+        ALL_26_CARDS.A.forEach(role => {
+          if (text.includes(role) || text.includes(role.replace('迷你Q', '謎擬Q'))) {
+            totalQty++;
+            itemsA.push(role);
+            if (coldRoles.A.includes(role)) coldCount++;
+          }
+        });
 
-      ALL_26_CARDS.B.forEach(role => {
-        const req = getBuyerCardRequirement(buyer, 'B', role);
-        if (req > 0) {
-          for (let i = 0; i < req; i++) itemsB.push(role);
-          totalQty += req;
-          if (coldRoles.B.includes(role)) coldCount += req;
-        }
-      });
+        ALL_26_CARDS.B.forEach(role => {
+          if (text.includes(role) || text.includes(role.replace('迷你Q', '謎擬Q'))) {
+            totalQty++;
+            itemsB.push(role);
+            if (coldRoles.B.includes(role)) coldCount++;
+          }
+        });
 
-      if (totalQty === 0) totalQty = 1;
+        if (totalQty === 0) totalQty = 1;
+      }
 
       return { coldCount, totalQty, itemsA, itemsB };
     }
@@ -553,7 +457,7 @@
         const isCold = coldRoles.A.includes(role);
         return `
           <button onclick="toggleColdRole('A', '${role}')" class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${isCold ? 'bg-[#FFDEE2] text-[#FF7E67] border border-[#FFB0B5]' : 'bg-white text-pika-textSub border border-[#FFE8C8]'}">
-            ${role}
+            ${isCold ? '🔥 ' : ''}${role}
           </button>
         `;
       }).join('');
@@ -562,7 +466,7 @@
         const isCold = coldRoles.B.includes(role);
         return `
           <button onclick="toggleColdRole('B', '${role}')" class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${isCold ? 'bg-[#FFDEE2] text-[#FF7E67] border border-[#FFB0B5]' : 'bg-white text-pika-textSub border border-[#FFE8C8]'}">
-            ${role}
+            ${isCold ? '🔥 ' : ''}${role}
           </button>
         `;
       }).join('');
@@ -574,11 +478,11 @@
       } else {
         coldRoles[zone].push(role);
       }
-      saveDataToStorage();
       renderColdRoleBadges();
       renderRankings();
     }
 
+    // 渲染折疊式買家排單選單 (比照 16900.jpg 畫圖排版：未展開時僅顯示名字與順位)
     function renderRankings() {
       const sorted = getSortedBuyers();
       const accordion = document.getElementById('accordionBuyerList');
@@ -590,12 +494,13 @@
 
         return `
           <div class="bg-[#FFFDF2] rounded-2xl border-2 border-[#FFE8C8] overflow-hidden transition-all shadow-sm">
+            <!-- 手繪排版區塊 1：名字標頭 (預設選單未點開時，只看得見買家名字與順位) -->
             <div onclick="toggleAccordion(${b.id})" class="p-4 bg-white hover:bg-[#FFFDF2] cursor-pointer flex items-center justify-between transition-all select-none border-b border-[#FFE8C8]">
               <div class="flex items-center gap-3">
                 <span class="bg-[#FF7E67] text-white font-title-style font-bold text-sm px-3 py-1 rounded-xl">
                   第 ${rank} 順位
                 </span>
-                <span class="text-xs font-bold text-pika-textSub">#${b.orderNo}</span>
+                <span class="text-xs font-bold text-pika-textSub">#{b.orderNo}</span>
                 <h4 class="font-bold text-pika-textMain text-base md:text-lg">${b.name}</h4>
               </div>
 
@@ -622,36 +527,37 @@
               </div>
             </div>
 
+            <!-- 手繪排版區塊 2：點開選單後展開的 A區 & B區 明細子區塊 -->
             ${isExpanded ? `
               <div class="p-4 space-y-3 bg-[#FFFDF2] border-t border-[#FFE8C8]">
-                ${showBuyerNotes ? `
-                  <div class="bg-white p-3 rounded-xl border border-[#FFE8C8]">
-                    <span class="text-xs font-bold text-pika-textSub block mb-1">喊單原文備註：</span>
-                    <p class="text-sm font-bold text-pika-textMain">${b.content}</p>
-                  </div>
-                ` : ''}
+                <div class="bg-white p-3 rounded-xl border border-[#FFE8C8]">
+                  <span class="text-xs font-bold text-pika-textSub block mb-1">喊單原文備註：</span>
+                  <p class="text-sm font-bold text-pika-textMain">${b.content}</p>
+                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <!-- A 區明細框 -->
                   <div class="bg-white p-3 rounded-2xl border-2 border-[#FFE8C8]">
                     <span class="text-xs font-bold text-[#FF7E67] block mb-2 pb-1 border-b border-[#FFE8C8]">🌸 A區 喊單品項 (${b.itemsA.length} 個)：</span>
                     ${b.itemsA.length > 0 ? `
                       <div class="flex flex-wrap gap-1.5">
                         ${b.itemsA.map(item => `
                           <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${coldRoles.A.includes(item) ? 'bg-[#FFDEE2] text-[#FF7E67] border border-[#FFB0B5]' : 'bg-[#FFF3B8] text-pika-textMain'}">
-                            ${item}
+                            ${item} ${coldRoles.A.includes(item) ? '🔥' : ''}
                           </span>
                         `).join('')}
                       </div>
                     ` : '<span class="text-xs text-pika-textSub font-bold">無 A區 品項</span>'}
                   </div>
 
+                  <!-- B 區明細框 -->
                   <div class="bg-white p-3 rounded-2xl border-2 border-[#FFE8C8]">
                     <span class="text-xs font-bold text-pika-blueText block mb-2 pb-1 border-b border-[#FFE8C8]">🌼 B區 喊單品項 (${b.itemsB.length} 個)：</span>
                     ${b.itemsB.length > 0 ? `
                       <div class="flex flex-wrap gap-1.5">
                         ${b.itemsB.map(item => `
                           <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${coldRoles.B.includes(item) ? 'bg-[#FFDEE2] text-[#FF7E67] border border-[#FFB0B5]' : 'bg-[#E0F7FC] text-pika-blueText'}">
-                            ${item}
+                            ${item} ${coldRoles.B.includes(item) ? '🔥' : ''}
                           </span>
                         `).join('')}
                       </div>
@@ -668,6 +574,7 @@
       renderBuyerProgress();
     }
 
+    // 控制手繪選單點擊展開/折疊
     function toggleAccordion(id) {
       if (expandedBuyerIds.has(id)) {
         expandedBuyerIds.delete(id);
@@ -686,6 +593,7 @@
       renderRankings();
     }
 
+    // 自定義卡片名字 Modal 管理
     function openCardManageModal() {
       renderManageCardLists();
       document.getElementById('cardManageModal').classList.remove('hidden');
@@ -693,7 +601,6 @@
 
     function closeCardManageModal() {
       document.getElementById('cardManageModal').classList.add('hidden');
-      saveDataToStorage();
       renderColdRoleBadges();
       renderRankings();
       renderPackCards();
@@ -727,13 +634,11 @@
     function updateCardName(zone, idx, newName) {
       if (newName.trim()) {
         ALL_26_CARDS[zone][idx] = newName.trim();
-        saveDataToStorage();
       }
     }
 
     function removeCard(zone, idx) {
       ALL_26_CARDS[zone].splice(idx, 1);
-      saveDataToStorage();
       renderManageCardLists();
     }
 
@@ -742,7 +647,6 @@
       const val = input.value.trim();
       if (val) {
         ALL_26_CARDS[zone].push(val);
-        saveDataToStorage();
         input.value = '';
         renderManageCardLists();
       }
@@ -770,15 +674,12 @@
       let matchedBuyer = null;
 
       for (let b of sorted) {
-        const totalNeeded = getBuyerCardRequirement(b, zone, role);
+        const text = b.content;
+        const roleKey = role.replace('迷你Q', '謎擬Q');
 
-        if (totalNeeded > 0) {
-          const currentReceived = matchRecords.filter(r => r.buyerName === b.name && r.zone === zone && r.role === role).length;
-
-          if (currentReceived < totalNeeded) {
-            matchedBuyer = b;
-            break;
-          }
+        if (text.includes(roleKey) || text.includes(role)) {
+          matchedBuyer = b;
+          break;
         }
       }
 
@@ -792,58 +693,8 @@
       };
 
       matchRecords.unshift(newRecord);
-      saveDataToStorage();
       renderMatchRecords();
       renderBuyerProgress();
-      renderOpenedSummary();
-    }
-
-    function handleManualDraw() {
-      const zone = document.getElementById('manualZoneSelect').value;
-      const input = document.getElementById('manualCardInput');
-      const rawVal = input.value.trim();
-
-      if (!rawVal) {
-        alert('請輸入卡片名稱！');
-        return;
-      }
-
-      let roleName = rawVal;
-      let count = 1;
-
-      const match = rawVal.match(/^(.+?)[\s*xX]*(\d+)$/);
-      if (match) {
-        roleName = match[1].trim();
-        count = parseInt(match[2], 10) || 1;
-      }
-
-      for (let i = 0; i < count; i++) {
-        handleDrawCard(zone, roleName);
-      }
-
-      input.value = '';
-    }
-
-    function renderOpenedSummary() {
-      const summaryContainer = document.getElementById('openedCardsSummary');
-      document.getElementById('totalOpenedBadge').innerText = `總計 ${matchRecords.length} 張`;
-
-      if (matchRecords.length === 0) {
-        summaryContainer.innerHTML = `<span class="text-xs text-pika-textSub">尚未開出任何卡片</span>`;
-        return;
-      }
-
-      const counts = {};
-      matchRecords.forEach(r => {
-        const key = `[${r.zone}] ${r.role}`;
-        counts[key] = (counts[key] || 0) + 1;
-      });
-
-      summaryContainer.innerHTML = Object.entries(counts).map(([cardKey, count]) => `
-        <span class="px-3 py-1.5 rounded-xl bg-[#FFF3B8] border border-[#F7C948] text-xs font-bold text-pika-textMain shadow-sm">
-          ${cardKey}：<span class="text-[#FF7E67] font-extrabold">${count}</span> 張
-        </span>
-      `).join('');
     }
 
     function renderMatchRecords() {
@@ -858,7 +709,6 @@
           </div>
         `;
         lucide.createIcons();
-        renderOpenedSummary();
         return;
       }
 
@@ -882,22 +732,31 @@
       `).join('');
 
       lucide.createIcons();
-      renderOpenedSummary();
     }
 
     function deleteSingleRecord(id) {
       matchRecords = matchRecords.filter(r => r.id !== id);
-      saveDataToStorage();
       renderMatchRecords();
       renderBuyerProgress();
     }
 
     function clearMatchRecords() {
-      if (confirm('確定要清空所有出貨分配紀錄嗎？')) {
+      if (confirm('確定要清空所有拆盒配對紀錄嗎？')) {
         matchRecords = [];
-        saveDataToStorage();
         renderMatchRecords();
         renderBuyerProgress();
+      }
+    }
+
+    function simulateBoxOpen() {
+      const allCardsCombined = [
+        ...ALL_26_CARDS.A.map(r => ({ zone: 'A', role: r })),
+        ...ALL_26_CARDS.B.map(r => ({ zone: 'B', role: r }))
+      ];
+
+      for (let i = 0; i < 20; i++) {
+        const randomCard = allCardsCombined[Math.floor(Math.random() * allCardsCombined.length)];
+        handleDrawCard(randomCard.zone, randomCard.role);
       }
     }
 
@@ -911,7 +770,7 @@
           <div class="bg-[#FFFDF2] p-3 rounded-2xl border border-[#FFE8C8] space-y-1">
             <div class="flex items-center justify-between text-xs">
               <span class="font-bold text-pika-textMain">第 ${idx + 1} 順位 #${b.orderNo} ${b.name}</span>
-              <span class="font-bold text-pika-accent">已配 ${receivedCount} / ${b.totalQty} 張</span>
+              <span class="font-bold text-pika-accent">已配 ${receivedCount} 張</span>
             </div>
             <p class="text-[11px] text-pika-textSub truncate">${b.content}</p>
           </div>
@@ -962,7 +821,6 @@
         });
       }
 
-      saveDataToStorage();
       closeBuyerModal();
       renderRankings();
     }
@@ -970,9 +828,28 @@
     function deleteBuyer(id) {
       if (confirm('確定要刪除這位買家嗎？')) {
         buyersData = buyersData.filter(b => b.id !== id);
-        saveDataToStorage();
         renderRankings();
       }
+    }
+
+    function exportCSV() {
+      const sorted = getSortedBuyers();
+      let csvContent = "﻿順位,原始留言編號,買家名稱,喊單內容,冷門角數量,總張數
+";
+
+      sorted.forEach((b, idx) => {
+        csvContent += `第 ${idx + 1} 順位,#${b.orderNo},"${b.name}","${b.content}",${b.coldCount},${b.totalQty}
+`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Poképeace_快閃代購排單順序表.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   </script>
 </body>
